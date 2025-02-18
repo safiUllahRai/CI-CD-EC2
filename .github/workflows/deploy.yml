@@ -19,7 +19,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '16'  # Specify the version of Node.js
+          node-version: '22.14.0'  # Specify the version of Node.js
 
       - name: Install dependencies
         run: |
@@ -28,7 +28,7 @@ jobs:
       # Build the Angular app
       - name: Build Angular app
         run: |
-          ng build --prod
+          ng build
 
       # Deploy to EC2 (using SSH)
       - name: Deploy to EC2
@@ -44,6 +44,6 @@ jobs:
             # Remove old build files
             sudo rm -rf /var/www/html/*
             # Copy new build files from GitHub Actions runner
-            sudo cp -r /home/ubuntu/your-angular-app/dist/* /var/www/html/
+            sudo cp -r /home/Downloads/angular-realworld-example-app/dist/angular-conduit/browser/* /var/www/html/
             # Start Nginx
             sudo systemctl start nginx
