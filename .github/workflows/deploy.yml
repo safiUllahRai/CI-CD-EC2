@@ -1,1 +1,49 @@
 
+name: Deploy Angular App to EC2
+
+on:
+  push:
+    branches:
+      - main  # Trigger deployment on pushing to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Set up Node.js and install dependencies
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'  # Specify the version of Node.js
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      # Build the Angular app
+      - name: Build Angular app
+        run: |
+          ng build --prod
+
+      # Deploy to EC2 (using SSH)
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            # Stop Nginx
+            sudo systemctl stop nginx
+            # Remove old build files
+            sudo rm -rf /var/www/html/*
+            # Copy new build files from GitHub Actions runner
+            sudo cp -r /home/ubuntu/your-angular-app/dist/* /var/www/html/
+            # Start Nginx
+            sudo systemctl start nginx
