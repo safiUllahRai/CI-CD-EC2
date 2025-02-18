@@ -28,7 +28,7 @@ jobs:
       # Build the Angular app
       - name: Build Angular app
         run: |
-          ng build
+          npm run build
 
       # Deploy to EC2 (using SSH)
       - name: Deploy to EC2
