@@ -29,7 +29,17 @@ jobs:
       - name: Build Angular app
         run: |
           npm run build
-
+# upload compose and .env to droplet
+      - name: Upload dist folder to ec2
+        uses: appleboy/scp-action@v0.1.7
+        continue-on-error: true
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "./dist"
+          target: "/home/ubuntu/"
+          debug: true
       # Deploy to EC2 (using SSH)
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.5
@@ -39,11 +49,21 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
+            set -e
             # Stop Nginx
+            echo "stoping nginx"
             sudo systemctl stop nginx
             # Remove old build files
+            echo "removing currently deployed code"
             sudo rm -rf /var/www/html/*
             # Copy new build files from GitHub Actions runner
-            sudo cp -r /home/Downloads/angular-realworld-example-app/dist/angular-conduit/browser/* /var/www/html/
+            echo "moving new code to /var/www/html"
+            sudo mv /home/ubuntu/dist/angular-conduit/browser/* /var/www/html/
+            echo "setting permissions for code directory"
+            sudo chown www-data:www-data /var/www/html/
+            sudo chmod 755 /var/www/html/
             # Start Nginx
+            echo "staring nginx"
             sudo systemctl start nginx
+            echo "removing dist folder from ec2"
+            sudo rm -rf /home/ubuntu/dist
